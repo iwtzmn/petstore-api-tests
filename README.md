@@ -171,5 +171,5 @@ source .venv/bin/activate</code></pre></p>
 <hr>
 <h2 class="code-line" data-line-start=158 data-line-end=159 ><a id="__158"></a>👩‍💻 Автор</h2>
 <p class="has-line-data" data-line-start="159" data-line-end="162">Сулейменова Ирина<br>
-QA Engineer | Python | API &amp; Automation Testing<br>
+QA Engineer | Python | API Automation Testing<br>
 📫 GitHub: iwtzmn</p>
