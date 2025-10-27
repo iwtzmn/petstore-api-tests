@@ -20,7 +20,6 @@
 <li class="has-line-data" data-line-start="21" data-line-end="23"><strong>Makefile</strong> (управление командами)</li>
 </ul>
 <hr>
-<hr>
 <h2>🛰 CI/CD (GitHub Actions)</h2>
 <ul>
 <li>Проект запускается в GitHub Actions при каждом push и pull request.</li>
