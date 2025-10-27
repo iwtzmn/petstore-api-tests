@@ -19,6 +19,9 @@ def test_order_create(api_client, unique_order_id, unique_pet_id, make_order, cl
     with allure.step("Проверяем заказ через GET /store/order/{id}"):
         resp = api_client.get_order(unique_order_id)
         assert resp.status_code in (200, 404), f"Неожиданный код на GET: {resp.status_code}"
+        if resp.status_code == 404:
+            with allure.step("PetStore вернул 404 на GET сразу после создания заказа (флейк стенда)"):
+                pytest.xfail(f"PetStore GET /store/order/{unique_order_id} returned 404 right after create")
         if resp.status_code == 200:
             attach_json("GET /order response", resp.json())
             body = resp.json()
@@ -40,6 +43,9 @@ def test_order_get(api_client, unique_order_id, unique_pet_id, make_order, clean
     with allure.step("Проверяем заказ через GET /store/order/{id}"):
         resp = api_client.get_order(unique_order_id)
         assert resp.status_code in (200, 404), f"Неожиданный код на GET: {resp.status_code}"
+        if resp.status_code == 404:
+            with allure.step("PetStore вернул 404 на GET сразу после создания заказа (флейк стенда)"):
+                pytest.xfail(f"PetStore GET /store/order/{unique_order_id} returned 404 right after create")
         if resp.status_code == 200:
             attach_json("GET /order response", resp.json())
             body = resp.json()
@@ -76,6 +82,9 @@ def test_order_create_param(api_client, unique_order_id, unique_pet_id,
     with allure.step("Проверяем заказ через GET /store/order/{id}"):
         resp = api_client.get_order(unique_order_id)
         assert resp.status_code in (200, 404)
+        if resp.status_code == 404:
+            with allure.step("PetStore вернул 404 на GET сразу после создания заказа (флейк стенда)"):
+                pytest.xfail(f"PetStore GET /store/order/{unique_order_id} returned 404 right after create")
         if resp.status_code == 200:
             attach_json("GET /order response", resp.json())
             data = resp.json()
@@ -113,6 +122,7 @@ def test_order_delete(api_client, unique_order_id, unique_pet_id, make_order):
                 attach_json("GET after delete", resp.json())
 
         if resp.status_code != 404:
-            pytest.xfail("Флак Petstore: заказ может временно оставаться доступным после DELETE")
+            with allure.step("PetStore вернул заказ после DELETE (флейк удаления)"):
+                pytest.xfail("Флак Petstore: заказ может временно оставаться доступным после DELETE")
         else:
             logging.info("Заказ успешно удалён (GET -> 404)")

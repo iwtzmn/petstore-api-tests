@@ -82,11 +82,15 @@ def test_pet_update_status(api_client, unique_pet_id, make_pet, cleanup, initial
         attach_json("Response body", resp.json())
 
         # Публичный PetStore нестабилен:
-        # 1) после апдейта на "pending" он иногда отвечает 404 как будто питомца нет
-        # 2) он может самовольно менять статус на "sold" вместо ожидаемого updated_status
-        if updated_status == "pending" and resp.status_code == 404:
-            with allure.step("PetStore вернул 404 после обновления на 'pending' (флейк)"):
-                pytest.xfail("PetStore flakiness: 404 after setting status='pending'")
+        # 1) иногда после апдейта вообще отвечает 404 (даже на переход available->sold)
+        # 2) он может самовольно менять статус на другой
+        if resp.status_code == 404:
+            with allure.step(
+                f"PetStore вернул 404 после обновления на '{updated_status}' (флейк)"
+            ):
+                pytest.xfail(
+                    f"PetStore flakiness: 404 after setting status='{updated_status}'"
+                )
 
         if resp.status_code == 200 and resp.json().get("status") != updated_status:
             with allure.step("PetStore вернул неожиданный статус после апдейта (флейк)"):

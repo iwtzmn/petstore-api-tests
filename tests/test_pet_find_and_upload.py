@@ -36,20 +36,37 @@ def test_pet_update_via_form(api_client, unique_pet_id, make_pet, new_name, new_
         attach_json("Request kwargs", kwargs)
         if resp.status_code == 200:
             attach_json("Response", resp.json())
-    # На публичном стенде Petstore этот эндпойнт часто отдаёт 405/400.
-    # Делаем тест толерантным: если не 200 — фиксируем как известный флак и
-    # пропускаем детальные проверки.
+
+    # Публичный PetStore флаки на form-data update:
+    # 200 = всё ок, обновил
+    # 400 / 405 = "я не принял форму" (часто так отвечает, но питомец может при этом всё равно обновиться)
+    # 404 = PetStore говорит "нет такого питомца", хотя мы его только что создали — это жёсткий флейк
     allowed = {200, 400, 405}
-    assert resp.status_code in allowed, f"Неожиданный код при обновлении через form-data: {resp.status_code}"
+
+    # Если вернулся 404 — это тот случай, где дальше проверять уже нечего.
+    if resp.status_code == 404:
+        with allure.step("PetStore вернул 404 на form-data update (флейк эндпойнта)"):
+            pytest.xfail(
+                f"PetStore form-data update returned 404 for pet_id={unique_pet_id}"
+            )
+
+    # Любой другой неожиданный код (например 500) — это уже реальный баг, пусть падает.
+    assert resp.status_code in allowed, (
+        f"Неожиданный код при обновлении через form-data: {resp.status_code}"
+    )
+
     logging.info(f"[UPDATE-FORM] sent: {kwargs}, got={resp.status_code}")
-    if resp.status_code != 200:
-        pytest.xfail(
-            "Публичный Petstore часто возвращает 405/400 на form-data update — пропускаем проверку содержимого")
+
+    # Раньше мы сразу делали xfail при любом !=200.
+    # Теперь НЕ делаем xfail на 400/405 — пробуем проверить через GET, возможно апдейт применился.
 
     with allure.step("Проверить обновление питомца через GET"):
         resp = get_with_retry(api_client, unique_pet_id, field="status", expected=new_status)
         attach_json("GET response", resp.json())
-        assert resp.status_code == 200
+
+        # Если даже после retry PetStore не отдаёт питомца — это уже критично.
+        assert resp.status_code == 200, "PetStore не вернул питомца после form-data update"
+
         pet = resp.json()
         logging.info(f"[UPDATE-FORM] got: name={pet.get('name')}, status={pet.get('status')}")
 
